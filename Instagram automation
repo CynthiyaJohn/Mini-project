@@ -1,21 +1,37 @@
 from instagrapi import Client
-from instagrapi.exceptions import TwoFactorRequired
+from instagrapi.exceptions import TwoFactorRequired, LoginRequired
+import configparser
 
+# Load credentials securely
 config = configparser.ConfigParser()
 config.read("instabot.ini")
 
-inta = config["insta"]
-username = inta["username"]
-password = inta["password"]
+insta = config["insta"]
+USERNAME = insta["username"]
+PASSWORD = insta["password"]
 
 client = Client()
-client.login(username, password)
 
-# example of following a user
-client.follow(username="example_user")
+try:
+    client.login(USERNAME, PASSWORD)
+    print("Login successful")
 
-# example of liking a post
-client.like(username, "post_id")
+except TwoFactorRequired:
+    print("Two-factor authentication required")
 
-# example of commenting on a post
-client.comment(username, "post_id", "Great post!")
+except LoginRequired:
+    print("Login failed. Check credentials or session")
+
+# ---- Sample actions (educational demo) ----
+
+# Follow a user (username must exist)
+client.user_follow_by_username("example_user")
+
+# Like a post using media ID (NOT username)
+media_id = client.media_pk_from_url(
+    "https://www.instagram.com/p/POST_ID/"
+)
+client.media_like(media_id)
+
+# Comment on a post
+client.media_comment(media_id, "Great post!")
